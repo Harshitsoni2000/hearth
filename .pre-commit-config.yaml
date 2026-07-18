@@ -6,3 +6,4 @@ repos:
       - id: go-imports
       - id: go-vet-mod
       - id: go-mod-tidy
+      - id: go-test-mod
