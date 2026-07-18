@@ -13,6 +13,19 @@ type Config struct {
 	Addr string
 }
 
+// VideoExtensions maps each supported video file extension (lowercase, with
+// leading dot) to the MIME type Hearth should serve it as. It is the single
+// source of truth for which files count as media, shared by internal/library
+// (listing) and internal/media (serving).
+var VideoExtensions = map[string]string{
+	".mkv":  "video/x-matroska",
+	".mp4":  "video/mp4",
+	".avi":  "video/x-msvideo",
+	".mov":  "video/quicktime",
+	".webm": "video/webm",
+	".m4v":  "video/mp4",
+}
+
 func Parse() Config {
 	dir := flag.String("dir", ".", "directory to serve media from")
 	port := flag.Int("port", 8080, "port to listen on")

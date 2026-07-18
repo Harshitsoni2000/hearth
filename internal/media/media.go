@@ -5,16 +5,9 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-)
 
-var extraMIMETypes = map[string]string{
-	".mkv":  "video/x-matroska",
-	".mp4":  "video/mp4",
-	".avi":  "video/x-msvideo",
-	".mov":  "video/quicktime",
-	".webm": "video/webm",
-	".m4v":  "video/mp4",
-}
+	"hearth/internal/config"
+)
 
 // Handler returns an http.Handler that serves files out of root, the
 // absolute media directory. It expects the request path to be available
@@ -57,7 +50,7 @@ func Handler(root string) http.Handler {
 
 		// Look up the lowercased extension in our override table, since Go's
 		// built-in MIME sniffing doesn't know these video container types.
-		if mimeType, ok := extraMIMETypes[strings.ToLower(filepath.Ext(fullPath))]; ok {
+		if mimeType, ok := config.VideoExtensions[strings.ToLower(filepath.Ext(fullPath))]; ok {
 			// Set Content-Type explicitly before ServeContent has a chance to guess.
 			w.Header().Set("Content-Type", mimeType)
 		}
