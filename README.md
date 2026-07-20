@@ -1,9 +1,10 @@
 # Hearth
 
-Hearth be LAN media server, write in Go. It serve movie file over HTTP so VLC on
-any device in house can stream them straight from disk — no transcode, no decode,
-no whole-file load into memory, just byte range sent over wire. Each device play
-independent: pause here, seek there, no sync between them.
+**Hearth** is a LAN media server, written in Go. It serves movie files over
+HTTP so VLC on any device in the house can stream them straight from disk —
+no transcoding, no decoding, no loading whole files into memory, just byte
+ranges sent over the wire. Each device plays independently: pause here, seek
+there, no syncing between them.
 
 ## Build
 
