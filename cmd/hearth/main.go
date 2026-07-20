@@ -22,6 +22,9 @@ func main() {
 	srv := server.New(cfg, mux)
 
 	log.Printf("hearth serving %s on %s:%d", cfg.Dir, cfg.Addr, cfg.Port)
+	for _, addr := range server.LANAddrs(cfg.Port) {
+		log.Printf("available at %s", addr)
+	}
 	if err := server.Run(srv); err != nil {
 		log.Fatal(err)
 	}
