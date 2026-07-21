@@ -1,10 +1,14 @@
 # Hearth
 
-**Hearth** is a LAN media server, written in Go. It serves movie files over
-HTTP so VLC on any device in the house can stream them straight from disk —
-no transcoding, no decoding, no loading whole files into memory, just byte
-ranges sent over the wire. Each device plays independently: pause here, seek
-there, no syncing between them.
+**Hearth** is a zero-dependency LAN media server written in pure Go. Point
+it at a directory of media and every device on the network — a laptop, a
+phone, the living-room TV — gets a browsable library and a direct stream
+into VLC, with no transcoding, no decoding, and no waiting for a whole
+file to load. Each viewer seeks and pauses independently; there's no
+shared playback state to synchronize.
+
+Deployment is one binary: copy `hearth` onto a machine on the LAN, run it,
+done.
 
 ## Build
 
@@ -17,7 +21,7 @@ Produce `./hearth` binary in repo root.
 ## Run
 
 ```
-./hearth -dir /path/to/movies
+./hearth -dir /path/to/media-directory
 ```
 
 Flags:
@@ -26,22 +30,24 @@ Flags:
 - `-port` — port to listen on. Default `8080`.
 - `-addr` — address to listen on. Default `0.0.0.0` (all interfaces).
 
+## Endpoints
+
+| Route | Returns |
+|---|---|
+| `GET /` | HTML tree view of the media library — folders collapsed by default, each file has a copy-link button |
+| `GET /api/files` | JSON listing of the same tree, for scripting/automation |
+| `GET /media/{path...}` | The raw file, streamed with `Range` support |
+
 ## Watching in VLC
 
-1. Open VLC.
-2. Go Media → Open Network Stream (Cmd+N on Mac).
-3. Paste URL: `http://<server-ip>:8080/media/<filename>`
-4. Hit Play.
+1. On any device on the LAN, open a browser to `http://<server-ip>:8080/`.
+2. Expand folders to find the file, tap the copy button next to it — this
+   copies the file's full stream URL to the clipboard (works over plain HTTP,
+   no HTTPS required).
+3. In VLC: Media → Open Network Stream (Cmd+N on Mac), paste, hit Play.
 
-Server print base URL for each LAN interface on startup — copy one of those and
-append `/media/<filename>` to it.
-
-Open `/` in browser (plain `http://<server-ip>:8080/`) to get plaintext list of
-every playable URL under `-dir`.
-
-### On the TV
-
-Install VLC app on TV. Open Network Stream same way, paste same URL, play.
+Server prints the base URL for each LAN interface on startup, in case you'd
+rather type a URL by hand: `http://<server-ip>:8080/media/<path>`.
 
 ### Faststart note
 
@@ -56,4 +62,5 @@ ffmpeg -i in.mp4 -c copy -movflags +faststart out.mp4
 
 ## Not included yet
 
-No web UI, no sync / watch-together, no transcoding — by design.
+No sync / watch-together, no transcoding, no authentication — by design.
+This is a LAN tool: it trusts the network it's running on.
