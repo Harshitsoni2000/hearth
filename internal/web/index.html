@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hearth</title>
+<style>
+  :root {
+    --bg: #12100e;
+    --fg: #f3ede4;
+    --muted: #b8ac9c;
+    --row-hover: #211d18;
+    --accent: #e0a34a;
+    --tick: #4ec96b;
+    --border: #2c2721;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 17px;
+    line-height: 1.4;
+  }
+  header {
+    padding: 20px 18px 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  header h1 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+  }
+  header p {
+    margin: 4px 0 0;
+    color: var(--muted);
+    font-size: 14px;
+  }
+  main { padding: 8px 10px 40px; }
+
+  ul.hearth-tree, ul.hearth-children {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  ul.hearth-children {
+    padding-left: 18px;
+    border-left: 1px solid var(--border);
+    margin-left: 10px;
+  }
+  ul.hearth-children.collapsed { display: none; }
+
+  li.hearth-folder > .hearth-folder-row,
+  li.hearth-file {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 10px;
+    border-radius: 8px;
+    min-height: 44px;
+  }
+  li.hearth-folder > .hearth-folder-row { cursor: pointer; }
+  li.hearth-folder > .hearth-folder-row:hover,
+  li.hearth-file:hover { background: var(--row-hover); }
+
+  .hearth-chevron {
+    display: inline-flex;
+    width: 16px;
+    height: 16px;
+    flex: none;
+    transition: transform 0.15s ease;
+    color: var(--muted);
+  }
+  /* Chevron points right when collapsed, down when open. Folders start
+     collapsed, so default is right-pointing (no rotation). When the row's
+     folder is open we add .open to the row and rotate. */
+  li.hearth-folder > .hearth-folder-row.open .hearth-chevron {
+    transform: rotate(90deg);
+  }
+
+  .hearth-name {
+    flex: 1 1 auto;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  li.hearth-folder > .hearth-folder-row .hearth-name { font-weight: 600; }
+  li.hearth-file .hearth-name { color: var(--fg); font-weight: 400; }
+
+  .hearth-folder-icon { color: var(--accent); flex: none; display: inline-flex; }
+  .hearth-file-icon { color: var(--muted); flex: none; display: inline-flex; }
+
+  .hearth-copy-btn {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    border-radius: 8px;
+    cursor: pointer;
+    padding: 0;
+  }
+  .hearth-copy-btn:hover { color: var(--fg); border-color: var(--muted); }
+  .hearth-copy-btn.copied { color: var(--tick); border-color: var(--tick); }
+  /* Show tick when copied, copy icon otherwise. */
+  .hearth-copy-btn .icon-tick { display: none; }
+  .hearth-copy-btn.copied .icon-tick { display: inline-flex; }
+  .hearth-copy-btn.copied .icon-copy { display: none; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Hearth</h1>
+  <p>Pick something to watch — tap the copy button, then paste into VLC.</p>
+</header>
+<main>
+<!-- HEARTH_TREE_START -->
+<ul class="hearth-tree">
+  <li class="hearth-folder">
+    <div class="hearth-folder-row">
+      <span class="hearth-chevron">
+        <svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4l4 4-4 4"/></svg>
+      </span>
+      <span class="hearth-folder-icon">
+        <svg viewBox="0 0 20 20" width="18" height="18" fill="currentColor"><path d="M2 5a2 2 0 0 1 2-2h3.2a2 2 0 0 1 1.4.6l.8.8a1 1 0 0 0 .7.3H16a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5z"/></svg>
+      </span>
+      <span class="hearth-name">Movies</span>
+    </div>
+    <ul class="hearth-children collapsed">
+      <li class="hearth-file">
+        <span class="hearth-file-icon">
+          <svg viewBox="0 0 20 20" width="16" height="16" fill="currentColor"><path d="M4 3h9l3 3v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/></svg>
+        </span>
+        <span class="hearth-name">Dune.mkv</span>
+        <button class="hearth-copy-btn" data-path="Movies/Dune.mkv" aria-label="Copy link">
+          <span class="icon-copy">
+            <svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="7" y="7" width="9" height="10" rx="1.5"/><path d="M4 13V4a1 1 0 0 1 1-1h8"/></svg>
+          </span>
+          <span class="icon-tick">
+            <svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10l4 4 8-8"/></svg>
+          </span>
+        </button>
+      </li>
+    </ul>
+  </li>
+</ul>
+<!-- HEARTH_TREE_END -->
+</main>
+<script>
+  // ---- Clipboard helper (MUST work on plain HTTP over a LAN IP) ----
+  // navigator.clipboard is unavailable in non-secure contexts (plain http
+  // to an IP address is NOT a secure context), so we try it only if present
+  // and fall back to the execCommand method, which works everywhere.
+  function copyText(text) {
+    if (navigator.clipboard && window.isSecureContext) {
+      // May still reject; caller handles both paths via the returned promise.
+      return navigator.clipboard.writeText(text).then(function () { return true; })
+        .catch(function () { return legacyCopy(text); });
+    }
+    return Promise.resolve(legacyCopy(text));
+  }
+
+  function legacyCopy(text) {
+    var ta = document.createElement("textarea");
+    ta.value = text;
+    // Keep it out of view and prevent scrolling/zoom jumps.
+    ta.style.position = "fixed";
+    ta.style.top = "-1000px";
+    ta.style.left = "-1000px";
+    ta.setAttribute("readonly", "");
+    document.body.appendChild(ta);
+    ta.select();
+    ta.setSelectionRange(0, ta.value.length);
+    var ok = false;
+    try {
+      ok = document.execCommand("copy");
+    } catch (e) {
+      ok = false;
+    }
+    document.body.removeChild(ta);
+    return ok;
+  }
+
+  // ---- Build the full URL for a file path ----
+  // Host/port come from the page's own location, so the copied URL always
+  // matches whatever address the user used to load this page.
+  //
+  // We percent-encode each path SEGMENT separately (not the whole path), so
+  // real "/" separators are preserved while spaces and characters like
+  // # ? % & inside a filename are encoded. Without this, a filename such as
+  // "My#1.mp4" would be truncated at the "#" (treated as a URL fragment) and
+  // the link would break. Do not simplify this to plain string concatenation,
+  // and do not encodeURIComponent the whole path (that would turn "/" into
+  // "%2F" and break the path structure).
+  function mediaURL(dataPath) {
+    var encoded = dataPath.split("/").map(encodeURIComponent).join("/");
+    return window.location.protocol + "//" + window.location.host + "/media/" + encoded;
+  }
+
+  // ---- One click handler on the whole tree (event delegation) ----
+  document.addEventListener("click", function (ev) {
+    var copyBtn = ev.target.closest(".hearth-copy-btn");
+    if (copyBtn) {
+      ev.stopPropagation();
+      var path = copyBtn.getAttribute("data-path");
+      var url = mediaURL(path);
+      copyText(url).then(function (ok) {
+        if (!ok) return;
+        copyBtn.classList.add("copied");
+        window.setTimeout(function () {
+          copyBtn.classList.remove("copied");
+        }, 1500);
+      });
+      return;
+    }
+
+    var row = ev.target.closest(".hearth-folder-row");
+    if (row) {
+      // The child list is the .hearth-children that is a sibling of this row,
+      // inside the same folder <li>.
+      var li = row.parentElement;
+      var children = li.querySelector(":scope > .hearth-children");
+      if (children) {
+        children.classList.toggle("collapsed");
+        row.classList.toggle("open");
+      }
+    }
+  });
+</script>
+</body>
+</html>
