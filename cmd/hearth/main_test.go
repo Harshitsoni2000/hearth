@@ -19,14 +19,13 @@ func mustWriteFile(t *testing.T, path string, contents string) {
 	}
 }
 
-func TestRootHandlerListsPlayableURLs(t *testing.T) {
+func TestRootHandlerRendersTree(t *testing.T) {
 	root := t.TempDir()
 	mustWriteFile(t, filepath.Join(root, "Dune.mkv"), "video-a")
 	mustWriteFile(t, filepath.Join(root, "Shows", "Ep1.mp4"), "video-b")
 	mustWriteFile(t, filepath.Join(root, "notes.txt"), "not a video")
 
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
-	req.Host = "192.168.1.5:8080"
 	rec := httptest.NewRecorder()
 
 	rootHandler(root).ServeHTTP(rec, req)
@@ -34,22 +33,22 @@ func TestRootHandlerListsPlayableURLs(t *testing.T) {
 	if rec.Code != http.StatusOK {
 		t.Fatalf("status = %d, want %d", rec.Code, http.StatusOK)
 	}
-	if ct := rec.Header().Get("Content-Type"); ct != "text/plain" {
-		t.Errorf("Content-Type = %q, want %q", ct, "text/plain")
+	if ct := rec.Header().Get("Content-Type"); ct != "text/html; charset=utf-8" {
+		t.Errorf("Content-Type = %q, want %q", ct, "text/html; charset=utf-8")
 	}
 
-	wantLines := []string{
-		"http://192.168.1.5:8080/media/Dune.mkv",
-		"http://192.168.1.5:8080/media/Shows/Ep1.mp4",
+	wantPaths := []string{
+		`data-path="Dune.mkv"`,
+		`data-path="Shows/Ep1.mp4"`,
 	}
 	body := rec.Body.String()
-	for _, want := range wantLines {
+	for _, want := range wantPaths {
 		if !strings.Contains(body, want) {
-			t.Errorf("body %q does not contain line %q", body, want)
+			t.Errorf("body does not contain %q", want)
 		}
 	}
 	if strings.Contains(body, "notes.txt") {
-		t.Errorf("body %q should not list non-video file notes.txt", body)
+		t.Errorf("body should not list non-video file notes.txt")
 	}
 }
 
@@ -57,7 +56,6 @@ func TestRootHandlerEmptyLibrary(t *testing.T) {
 	root := t.TempDir()
 
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
-	req.Host = "localhost:8080"
 	rec := httptest.NewRecorder()
 
 	rootHandler(root).ServeHTTP(rec, req)
@@ -65,25 +63,27 @@ func TestRootHandlerEmptyLibrary(t *testing.T) {
 	if rec.Code != http.StatusOK {
 		t.Fatalf("status = %d, want %d", rec.Code, http.StatusOK)
 	}
-	if body := rec.Body.String(); body != "" {
-		t.Errorf("body = %q, want empty for a library with no video files", body)
+	if body := rec.Body.String(); strings.Contains(body, `data-path="`) {
+		t.Errorf("body = %q, should contain no data-path attribute for an empty library", body)
 	}
 }
 
-func TestRootHandlerScanErrorWritesErrorLine(t *testing.T) {
+func TestRootHandlerBuildTreeErrorServesHTML500(t *testing.T) {
 	missingRoot := filepath.Join(t.TempDir(), "does-not-exist")
 
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
-	req.Host = "localhost:8080"
 	rec := httptest.NewRecorder()
 
 	rootHandler(missingRoot).ServeHTTP(rec, req)
 
-	if rec.Code != http.StatusOK {
-		t.Fatalf("status = %d, want %d", rec.Code, http.StatusOK)
+	if rec.Code != http.StatusInternalServerError {
+		t.Fatalf("status = %d, want %d", rec.Code, http.StatusInternalServerError)
+	}
+	if ct := rec.Header().Get("Content-Type"); ct != "text/html; charset=utf-8" {
+		t.Errorf("Content-Type = %q, want %q", ct, "text/html; charset=utf-8")
 	}
 	body := rec.Body.String()
-	if !strings.Contains(body, "error") {
-		t.Errorf("body %q should contain an error line when Scan fails", body)
+	if !strings.Contains(body, "Could not read the media library") {
+		t.Errorf("body %q should contain the error message", body)
 	}
 }

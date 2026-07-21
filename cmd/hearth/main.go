@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	"io"
 	"log"
 	"net/http"
 
@@ -9,6 +9,7 @@ import (
 	"hearth/internal/library"
 	"hearth/internal/media"
 	"hearth/internal/server"
+	"hearth/internal/web"
 )
 
 func main() {
@@ -17,7 +18,7 @@ func main() {
 	mux := http.NewServeMux()
 	mux.Handle("GET /media/{path...}", media.Handler(cfg.Dir))
 	mux.Handle("GET /api/files", library.JSONHandler(cfg.Dir))
-	mux.HandleFunc("GET /", rootHandler(cfg.Dir))
+	mux.Handle("GET /", rootHandler(cfg.Dir))
 
 	srv := server.New(cfg, mux)
 
@@ -30,20 +31,18 @@ func main() {
 	}
 }
 
-// rootHandler returns a handler that lists every media file under dir as a
-// plaintext list of playable URLs, e.g. http://<host>/media/<path>.
-func rootHandler(dir string) http.HandlerFunc {
+func rootHandler(root string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "text/plain")
-
-		entries, err := library.Scan(dir)
+		tree, err := library.BuildTree(root)
 		if err != nil {
-			fmt.Fprintf(w, "error scanning library: %v\n", err)
+			w.Header().Set("Content-Type", "text/html; charset=utf-8")
+			w.WriteHeader(http.StatusInternalServerError)
+			io.WriteString(w, "<!DOCTYPE html><p>Could not read the media library.</p>")
 			return
 		}
-
-		for _, e := range entries {
-			fmt.Fprintf(w, "http://%s/media/%s\n", r.Host, e.Path)
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		if err := web.Render(w, tree); err != nil {
+			log.Printf("render error: %v", err)
 		}
 	}
 }
