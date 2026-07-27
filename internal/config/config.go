@@ -24,6 +24,7 @@ var VideoExtensions = map[string]string{
 	".mov":  "video/quicktime",
 	".webm": "video/webm",
 	".m4v":  "video/mp4",
+	".pdf":  "application/pdf",
 }
 
 func Parse() Config {
